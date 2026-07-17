@@ -1,4 +1,3 @@
-#ssdfsf
 pipeline {
 
     agent {
@@ -30,6 +29,7 @@ pipeline {
                     echo "========================================="
                     echo "Environment Information"
                     echo "========================================="
+                    echo "*****************************************"
 
                     echo "Hostname:"
                     hostname
