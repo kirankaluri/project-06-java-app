@@ -1,73 +1,33 @@
 pipeline {
-
-    agent { label 'linux' }
-
-    options {
-        timestamps()
-    }
+    agent any
 
     stages {
 
-        stage('Checkout') {
-            steps {
-                echo 'Checking out source code...'
-                checkout scm
-            }
-        }
-
-        stage('Environment Information') {
-            steps {
-                sh '''
-                    echo "Hostname:"
-                    hostname
-
-                    echo "Current Directory:"
-                    pwd
-
-                    echo "Java Version:"
-                    java -version
-
-                    echo "Git Version:"
-                    git --version
-
-                    echo "Docker Version:"
-                    docker --version
-
-                    echo "Maven Version:"
-                    mvn -version
-                '''
-            }
-        }
-
         stage('Build') {
             steps {
-                 sh 'mvn clean compile'
-                }
-}
+                sh 'mvn clean package'
+            }
+        }
 
-         stage('Test') {
-             steps {
-               sh 'mvn test'
-               }
-}
+        stage('Test') {
+            steps {
+                sh 'mvn test'
+            }
+        }
 
-         stage('Package') {
-             steps {
-                 sh 'mvn package'}
-}
+    }
 
     post {
-     always {
-             archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-            }
+        always {
+            echo 'Pipeline finished'
+        }
 
         success {
-            echo 'Pipeline Successful.'
+            echo 'SUCCESS'
         }
 
         failure {
-            echo 'Pipeline Failed.'
+            echo 'FAILED'
         }
     }
-}
 }
