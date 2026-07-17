@@ -40,37 +40,28 @@ pipeline {
         }
 
         stage('Build') {
-            steps {
-                sh '''
-                    echo "Starting Build..."
-                    ls -la
-                '''
-            }
-        }
-
-        stage('Test') {
-            steps {
-                sh '''
-                    echo "Running Tests..."
-                    echo "No tests available."
-                '''
-            }
-        }
-
-        stage('Package') {
-            steps {
-                sh '''
-                    echo "Packaging Application..."
-                '''
-            }
-        }
+    steps {
+        sh 'mvn clean compile'
     }
+}
+
+stage('Test') {
+    steps {
+        sh 'mvn test'
+    }
+}
+
+stage('Package') {
+    steps {
+        sh 'mvn package'
+    }
+}
 
     post {
 
-        always {
-            echo 'Pipeline Finished.'
-        }
+     always {
+             archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+            }
 
         success {
             echo 'Pipeline Successful.'
