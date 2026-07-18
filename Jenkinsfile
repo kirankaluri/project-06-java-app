@@ -9,16 +9,19 @@ pipeline {
         buildDiscarder(logRotator(numToKeepStr: '10'))
     }
 
+    tools {
+        maven 'Maven3'
+    }
+
     environment {
         APP_NAME = 'project06-java-app'
-        MAVEN_OPTS = '-Xmx1024m'
     }
 
     stages {
 
         stage('Checkout') {
             steps {
-                echo '========== CHECKOUT =========='
+                echo "========== CHECKOUT =========="
                 checkout scm
             }
         }
@@ -26,10 +29,9 @@ pipeline {
         stage('Environment Information') {
             steps {
                 sh '''
-                    echo "========================================="
+                    echo "=================================="
                     echo "Environment Information"
-                    echo "========================================="
-                    echo "*****************************************"
+                    echo "=================================="
 
                     echo "Hostname:"
                     hostname
@@ -59,7 +61,7 @@ pipeline {
                     whoami
 
                     echo
-                    echo "Repository Files:"
+                    echo "Files:"
                     ls -la
                 '''
             }
@@ -67,57 +69,105 @@ pipeline {
 
         stage('Build') {
             steps {
-                echo '========== BUILD =========='
+                echo "========== BUILD =========="
                 sh 'mvn clean compile'
             }
         }
 
         stage('Unit Test') {
             steps {
-                echo '========== UNIT TEST =========='
+                echo "========== UNIT TEST =========="
                 sh 'mvn test'
+            }
+        }
+
+        stage('SonarQube Analysis') {
+            steps {
+                echo "========== SONARQUBE ANALYSIS =========="
+
+                withSonarQubeEnv('SonarQube') {
+
+                    sh '''
+                        mvn sonar:sonar \
+                        -Dsonar.projectKey=project06-java-app \
+                        -Dsonar.projectName="Project 06 Java App"
+                    '''
+                }
+            }
+        }
+
+        stage('Quality Gate') {
+            steps {
+
+                timeout(time: 5, unit: 'MINUTES') {
+
+                    waitForQualityGate abortPipeline: true
+
+                }
+
             }
         }
 
         stage('Package') {
             steps {
-                echo '========== PACKAGE =========='
+                echo "========== PACKAGE =========="
                 sh 'mvn package'
             }
         }
 
         stage('Archive Artifact') {
             steps {
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+
+                archiveArtifacts artifacts: 'target/*.jar',
+                                 fingerprint: true
+
             }
         }
+
     }
 
     post {
 
         always {
-            echo 'Cleaning Workspace...'
+
+            echo "Cleaning Workspace..."
+
             cleanWs()
+
         }
 
         success {
-            echo '====================================='
-            echo 'Pipeline Completed Successfully'
-            echo '====================================='
+
+            echo '''
+=========================================
+Pipeline Completed Successfully
+=========================================
+'''
+
         }
 
         failure {
-            echo '====================================='
-            echo 'Pipeline Failed'
-            echo '====================================='
+
+            echo '''
+=========================================
+Pipeline Failed
+=========================================
+'''
+
         }
 
         unstable {
-            echo 'Pipeline is Unstable'
+
+            echo "Pipeline is Unstable"
+
         }
 
         aborted {
-            echo 'Pipeline Aborted'
+
+            echo "Pipeline Aborted"
+
         }
+
     }
+
 }
