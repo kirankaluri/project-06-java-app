@@ -171,3 +171,23 @@ Pipeline Failed
     }
 
 }
+
+stage('Docker Build') {
+    steps {
+        echo "========== DOCKER BUILD =========="
+
+        sh '''
+            docker build -t project06-java-app:${BUILD_NUMBER} .
+        '''
+    }
+}
+
+stage('Docker Image Verification') {
+    steps {
+        echo "========== DOCKER IMAGES =========="
+
+        sh '''
+            docker images | grep project06-java-app
+        '''
+    }
+}
